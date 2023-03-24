@@ -1,26 +1,44 @@
 import os
+from copy import deepcopy
+
+import pandas as pd
 
 
-####### STUDENTS FILL THIS OUT ######
 # Question 3
-def reduce_dimension_ndc(df, ndc_df):
+def reduce_dimension_ndc(data: pd.DataFrame, ndc: pd.DataFrame) -> pd.DataFrame:
     """
-    df: pandas dataframe, input dataset
-    ndc_df: pandas dataframe, drug code dataset used for mapping in generic names
-    return:
-        df: pandas dataframe, output dataframe with joined generic drug name
+    Add a new field with generic drug names.
+
+    Args:
+        data: Input dataset of EHR data at line level.
+        ndc: Mapping of NDC codes to generic drug names.
+
+    Returns:
+        Original dataset with a new field indicating generic drug names.
     """
+    ndc_drug_map = ndc.set_index("NDC_Code")["Non-proprietary Name"].to_dict()
+    df = deepcopy(data)
+    df["generic_drug_name"] = df["ndc_code"].map(ndc_drug_map)
     return df
 
 
 # Question 4
-def select_first_encounter(df):
+def select_first_encounter(data: pd.DataFrame) -> pd.DataFrame:
     """
-    df: pandas dataframe, dataframe with all encounters
-    return:
-        - first_encounter_df: pandas dataframe, dataframe with only the first encounter for a given patient
+    Select the first encounter for each patient in the dataset.
+
+    Args:
+        data: Input dataset of EHR data at line level.
+
+    Returns:
+        A Dataframe with only the first encounter for a given patient
     """
-    return first_encounter_df
+    return deepcopy(
+        data.sort_values("encounter_id", ascending=True)
+        .groupby("patient_nbr")
+        .first()
+        .reset_index()
+    )
 
 
 # Question 6
