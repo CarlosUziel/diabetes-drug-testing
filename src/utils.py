@@ -1,23 +1,39 @@
 import os
+from copy import deepcopy
+from typing import Iterable, Tuple
 
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 import tensorflow_probability as tfp
 
-from src.utils.questions import create_tf_numeric_feature
 
+def aggregate_dataset(
+    data: pd.DataFrame, grouping_field_list: Iterable[str], array_field: str
+) -> Tuple[pd.DataFrame, Iterable[str]]:
+    """
+    Aggregate dataset to the right level for modeling
 
-def aggregate_dataset(df, grouping_field_list, array_field):
+    Args:
+        data: Input dataset of EHR data at line level.
+        grouping_field_list: Field to group data by.
+        array_field: Field used to create dummy variables.
+
+    Returns:
+        A dataframe ready for modeling.
+    """
     df = (
-        df.groupby(grouping_field_list)["encounter_id", array_field]
+        deepcopy(data)
+        .groupby(grouping_field_list)[["encounter_id", array_field]]
         .apply(lambda x: x[array_field].values.tolist())
         .reset_index()
         .rename(columns={0: array_field + "_array"})
     )
 
-    dummy_df = pd.get_dummies(df[array_field + "_array"].apply(pd.Series).stack()).sum(
-        level=0
+    dummy_df = (
+        pd.get_dummies(df[array_field + "_array"].apply(pd.Series).stack())
+        .groupby(level=1)
+        .sum()
     )
     dummy_col_list = [x.replace(" ", "_") for x in list(dummy_df.columns)]
     dict(zip([x for x in list(dummy_df.columns)], dummy_col_list))
