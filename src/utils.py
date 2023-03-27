@@ -8,8 +8,8 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 
 
-def aggregate_dataset(
-    data: pd.DataFrame, grouping_field_list: Iterable[str], array_field: str
+def get_dummy_dataset(
+    data: pd.DataFrame, dummy_field: str
 ) -> Tuple[pd.DataFrame, Iterable[str]]:
     """
     Aggregate dataset to the right level for modeling
@@ -22,24 +22,12 @@ def aggregate_dataset(
     Returns:
         A dataframe ready for modeling.
     """
-    df = (
-        deepcopy(data)
-        .groupby(grouping_field_list)[["encounter_id", array_field]]
-        .apply(lambda x: x[array_field].values.tolist())
-        .reset_index()
-        .rename(columns={0: array_field + "_array"})
-    )
-
-    dummy_df = (
-        pd.get_dummies(df[array_field + "_array"].apply(pd.Series).stack())
-        .groupby(level=0)
-        .sum()
-    )
+    dummy_df = pd.get_dummies(data[dummy_field]).groupby(level=0).sum()
 
     dummy_col_list = [col.lower().replace(" ", "_") for col in list(dummy_df.columns)]
-    concat_df = pd.concat([df, dummy_df], axis=1)
+    concat_df = pd.concat([data, dummy_df], axis=1)
     concat_df.columns = [
-        col.lower().replace(" ", "_") for col in list(df.columns)
+        col.lower().replace(" ", "_") for col in list(data.columns)
     ] + dummy_col_list
 
     return concat_df, dummy_col_list
