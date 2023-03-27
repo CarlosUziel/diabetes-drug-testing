@@ -1,0 +1,21 @@
+name: diabetes_drug_testing
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - tensorflow
+  - tensorflow-probability
+  - pandas
+  - matplotlib
+  - seaborn
+  - isort
+  - autoflake
+  - black
+  - black-jupyter
+  - pylint
+  - flake8
+  - scikit-learn
+  - jupyterlab
+  - ydata-profiling
+prefix: /home/uziel/miniconda3/envs/diabetes_drug_testing
